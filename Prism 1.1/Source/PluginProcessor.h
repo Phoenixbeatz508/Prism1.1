@@ -68,8 +68,40 @@ public:
         End_OF_LIST
     };
 
-	using DSP_order = std::array<DSP_Options, static_cast<size_t>(DSP_Options::End_OF_LIST)>;
+	juce::AudioProcessorValueTreeState apvts{ *this, nullptr, "Parameters Tree", createParameterLayout() };
 
+	name getDSPName(DSP_Options option);
+	layout.add(std::make_unique<juce::AudioParameterFloat>("shine", "Shine", 0.0f, 1.0f, 0.5f));
+	layout.add(std::make_unique<juce::AudioParameterFloat>("glitch", "Glitch", 0.0f, 1.0f, 0.5f));
+	layout.add(std::make_unique<juce::AudioParameterFloat>("width", "Width", 0.0f, 1.0f, 0.5f));
+	layout.add(std::make_unique<juce::AudioParameterFloat>("digital", "Digital", 0.0f, 1.0f, 0.5f));
+	layout.add(std::make_unique<juce::AudioParameterFloat>("space", "Space", 0.0f, 1.0f, 0.5f));
+	layout.add(std::make_unique<juce::AudioParameterFloat>("emotion", "Emotion", 0.0f, 1.0f, 0.5f));
+
+
+        using DSP_order = std::array<DSP_Options, static_cast<size_t>(DSP_Options::End_OF_LIST)>;
+		prism1.1AudioProcessor::DSP_order dsp_order;
+
+		juce::AudioParamenterfloat* getParameterForDSP(DSP_Options option)
+		{
+			switch (option)
+			{
+			case DSP_Options::shine:
+				return apvts.getRawParameterValue("shine");
+			case DSP_Options::Glitch:
+				return apvts.getRawParameterValue("glitch");
+			case DSP_Options::Width:
+				return apvts.getRawParameterValue("width");
+			case DSP_Options::Digital:
+				return apvts.getRawParameterValue("digital");
+			case DSP_Options::Space:
+				return apvts.getRawParameterValue("space");
+			case DSP_Options::Emotion:
+				return apvts.getRawParameterValue("emotion");
+			default:
+				return nullptr;
+			}
+		}
 private:
 	DSP_order dsp_order;
 
