@@ -9,6 +9,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "../prism_dsp/include/juce_dsp/juce_dsp.h"
 
 //==============================================================================
 /**
@@ -55,8 +56,49 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    
+    enum class DSP_Options
+    {
+        shine
+        Glitch,
+        Width,
+        Digital,
+        Space,
+        Emotion,
+        End_OF_LIST
+    };
+
+	using DSP_order = std::array<DSP_Options, static_cast<size_t>(DSP_Options::End_OF_LIST)>;
 
 private:
+	DSP_order dsp_order;
+
+	template<typename DSP>
+	struct DSP_choice : : public juce::dsp::ProcessorBase
+	{
+		DSP_choice() = default;
+		void prepare(const juce::dsp::ProcessSpec& spec) override
+		{
+			if (currentChoice.has_value())
+				std::visit([&](auto&& dsp) { dsp.prepare(spec); }, currentChoice.value());
+		}
+		void process(const juce::dsp::ProcessContextReplacing<float>& context) override
+		{
+			if (currentChoice.has_value())
+				std::visit([&](auto&& dsp) { dsp.process(context); }, currentChoice.value());
+		}
+		void reset() override
+		{
+			if (currentChoice.has_value())
+				std::visit([&](auto&& dsp) { dsp.reset(); }, currentChoice.value());
+		}
+		std::optional<std::variant<juce::dsp::Shine<float>, juce::dsp::Glitch<float>, juce::dsp::Width<float>, juce::dsp::Digital<float>, juce::dsp::Space<float>, juce::dsp::Emotion<float>>> currentChoice;
+	};
+
+	juce::dsp::ProcessorChain<juce::dsp::Shine<float>, juce::dsp::Glitch<float>, juce::dsp::Width<float>, juce::dsp::Digital<float>, juce::dsp::Space<float>, juce::dsp::Emotion<float>> processorChain;
+
+	using DSP_pointers = std::array<std::optional<std::variant<juce::dsp::Shine<float>, juce::dsp::Glitch<float>, juce::dsp::Width<float>, juce::dsp::Digital<float>, juce::dsp::Space<float>, juce::dsp::Emotion<float>>>, static_cast<size_t>(DSP_Options::End_OF_LIST)>;
+	prism1.1AudioProcessor::DSP_pointers dsp_pointers;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Prism1_1AudioProcessor)
 };
